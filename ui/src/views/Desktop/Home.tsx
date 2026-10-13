@@ -46,7 +46,7 @@ export default function DesktopHome() {
   };
 
   useEffect(() => {
-    fetchState();
+    const initialLoad = window.setTimeout(() => { void fetchState(); }, 0);
     
     // Refresh on focus
     const onFocus = () => fetchState();
@@ -68,21 +68,26 @@ export default function DesktopHome() {
     }, 1000);
 
     return () => {
+      window.clearTimeout(initialLoad);
       window.removeEventListener('focus', onFocus);
       clearInterval(interval);
     };
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const delay = setTimeout(async () => {
       try {
         const res = await api.searchTasks(search);
-        setTasks(res.items || []);
+        if (!cancelled) setTasks(res.items || []);
       } catch (e) {
         console.error(e);
       }
     }, 300);
-    return () => clearTimeout(delay);
+    return () => {
+      cancelled = true;
+      clearTimeout(delay);
+    };
   }, [search]);
 
   const handleAction = async (action: () => Promise<any>) => {

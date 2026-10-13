@@ -76,7 +76,10 @@ function waitForBackend() {
                 return;
             finished = true;
             clearTimeout(timeout);
-            error ? reject(error) : resolve();
+            if (error)
+                reject(error);
+            else
+                resolve();
         };
         const poll = () => {
             if (isQuitting)

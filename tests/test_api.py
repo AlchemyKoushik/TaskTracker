@@ -72,6 +72,9 @@ class TaskLifecycleApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         self.assertIn('<div id="root">', response.text)
 
+        response = self.client.get("/api/v1/does-not-exist")
+        self.assertEqual(response.status_code, 404, response.text)
+
 
 if __name__ == "__main__":
     unittest.main()

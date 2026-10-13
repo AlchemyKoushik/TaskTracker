@@ -42,7 +42,8 @@ function waitForBackend(): Promise<void> {
       if (finished) return;
       finished = true;
       clearTimeout(timeout);
-      error ? reject(error) : resolve();
+      if (error) reject(error);
+      else resolve();
     };
 
     const poll = () => {

@@ -82,14 +82,19 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={isDesktopEnv ? <DesktopHome /> : <HostedHome />} />
-          <Route path="history" element={<DesktopHistory />} />
-          <Route path="settings" element={<DesktopSettings />} />
-        </Route>
+        {isDesktopEnv ? (
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<DesktopHome />} />
+            <Route path="history" element={<DesktopHistory />} />
+            <Route path="settings" element={<DesktopSettings />} />
+          </Route>
+        ) : (
+          <Route path="/" element={<HostedHome />} />
+        )}
         
         {/* Standalone Report Route */}
         <Route path="/report/:shareToken" element={<PublicReport />} />
+        {!isDesktopEnv && <Route path="*" element={<HostedHome />} />}
       </Routes>
     </Router>
   );

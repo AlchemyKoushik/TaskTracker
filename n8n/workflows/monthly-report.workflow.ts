@@ -24,7 +24,7 @@ const monthlyPublish = node({
     waitBetweenTries: 5000,
     parameters: {
       method: 'POST',
-      url: placeholder('Set the full HTTPS URL ending in /api/v1/server/reports/publish'),
+      url: 'https://tracker.alchemy-research.com/api/v1/server/reports/publish',
       authentication: 'genericCredentialType',
       genericAuthType: 'httpTemplatedCustomAuth',
       sendBody: true,

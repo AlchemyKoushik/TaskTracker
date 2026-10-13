@@ -13,6 +13,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import Date as SqlDate, DateTime as SqlDateTime, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from tasktracker import models
@@ -209,11 +210,18 @@ def create_category(payload: CategoryCreate, session: Session = Depends(db_sessi
     if existing:
         raise HTTPException(status_code=409, detail={"error": "category_exists", "id": existing.id, "message": "That category already exists."})
     row = models.Category(id=str(uuid4()), name=payload.name.strip(), color=payload.color, created_at=now, updated_at=now, archived=False)
-    session.add(row)
-    session.flush()
-    from tasktracker.repository import enqueue, serialize_record
-    enqueue(session, "category", row.id, serialize_record(row))
-    session.commit()
+    try:
+        session.add(row)
+        session.flush()
+        from tasktracker.repository import enqueue, serialize_record
+        enqueue(session, "category", row.id, serialize_record(row))
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail={
+            "error": "category_exists",
+            "message": "That category already exists.",
+        }) from exc
     return _category_view(row)
 
 
@@ -467,6 +475,10 @@ def _frontend_directory() -> Path | None:
 @app.get("/{frontend_path:path}", include_in_schema=False)
 def frontend(frontend_path: str):
     """Serve the compiled browser app and support BrowserRouter deep links."""
+    # Unknown API routes must remain API 404s. Returning index.html here would
+    # make a typo look like a successful API call and hide integration failures.
+    if frontend_path == "api" or frontend_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API route not found")
     directory = _frontend_directory()
     if directory is None:
         raise HTTPException(status_code=404, detail="Frontend bundle is not installed")

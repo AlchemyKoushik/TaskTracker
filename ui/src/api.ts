@@ -6,20 +6,33 @@ export const API_BASE_URL = isDesktopEnv
   : (import.meta.env.VITE_API_BASE_URL || '/api/v1');
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      signal: options?.signal || controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('TaskTracker did not respond in time. Check that the local service is running.');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     let errorData: any;
     try {
       errorData = await response.json();
     } catch {
-      throw new Error(`API Error: ${response.statusText}`);
+    throw new Error(`API Error: ${response.statusText || response.status}`);
     }
     const detail = errorData?.detail;
     const message = typeof detail === 'string'

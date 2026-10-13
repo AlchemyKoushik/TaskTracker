@@ -16,9 +16,12 @@ export function SyncIndicator() {
   };
 
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30000); // Check every 30s
-    return () => clearInterval(interval);
+    const initialLoad = window.setTimeout(() => { void fetchStatus(); }, 0);
+    const interval = window.setInterval(() => { void fetchStatus(); }, 30000); // Check every 30s
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.clearInterval(interval);
+    };
   }, []);
 
   const handleSync = async () => {
@@ -36,9 +39,9 @@ export function SyncIndicator() {
 
   if (!status) return null;
 
-  const { pending_records, last_sync_error, last_sync_at } = status;
+  const { pending_records, last_error, last_sync_at } = status;
   
-  const isError = !!last_sync_error;
+  const isError = !!last_error;
   const isUpToDate = pending_records === 0;
 
   let Icon = isSyncing ? RefreshCw : (isUpToDate && !isError ? CheckCircle : AlertCircle);
@@ -50,7 +53,7 @@ export function SyncIndicator() {
       onClick={handleSync}
       disabled={isSyncing}
       className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-800 transition-colors w-full justify-center md:justify-start group ${isSyncing ? 'opacity-80' : ''}`}
-      title={isError ? `Error: ${last_sync_error}` : `Pending: ${pending_records}`}
+      title={isError ? `Error: ${last_error}` : `Pending: ${pending_records}`}
     >
       <Icon className={`w-4 h-4 shrink-0 ${color} ${isSyncing ? 'animate-spin' : ''}`} />
       <div className="hidden md:flex flex-col items-start leading-tight">
