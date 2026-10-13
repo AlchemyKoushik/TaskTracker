@@ -407,6 +407,9 @@ def receive_sync(payload: SyncPushRequest, authorization: str | None = Header(de
     except HTTPException:
         session.rollback()
         raise
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Sync batch contains records with unresolved dependencies; it is safe to retry.")
     except Exception:
         session.rollback()
         raise HTTPException(status_code=503, detail="Could not apply sync batch; it is safe to retry.")
