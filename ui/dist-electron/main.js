@@ -67,6 +67,20 @@ catch (error) {
 }
 const BACKEND_URL = 'http://127.0.0.1:8765';
 const isDev = !electron_1.app.isPackaged;
+const hasSingleInstanceLock = electron_1.app.requestSingleInstanceLock();
+if (!hasSingleInstanceLock) {
+    electron_1.app.quit();
+}
+else {
+    electron_1.app.on('second-instance', () => {
+        if (!mainWindow)
+            return;
+        if (mainWindow.isMinimized())
+            mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+    });
+}
 function waitForBackend() {
     return new Promise((resolve, reject) => {
         let finished = false;
@@ -236,6 +250,8 @@ function stopBackend() {
     });
 }
 electron_1.app.whenReady().then(async () => {
+    if (!hasSingleInstanceLock)
+        return;
     logFile = path.join(electron_1.app.getPath('userData'), 'tasktracker-electron.log');
     fs.mkdirSync(path.dirname(logFile), { recursive: true });
     log(`Starting TaskTracker packaged=${electron_1.app.isPackaged} resources=${process.resourcesPath}`);

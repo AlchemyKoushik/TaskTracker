@@ -33,6 +33,18 @@ try {
 
 const BACKEND_URL = 'http://127.0.0.1:8765';
 const isDev = !app.isPackaged;
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
 
 function waitForBackend(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -199,6 +211,7 @@ function stopBackend(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  if (!hasSingleInstanceLock) return;
   logFile = path.join(app.getPath('userData'), 'tasktracker-electron.log');
   fs.mkdirSync(path.dirname(logFile), { recursive: true });
   log(`Starting TaskTracker packaged=${app.isPackaged} resources=${process.resourcesPath}`);
