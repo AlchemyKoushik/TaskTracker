@@ -1,0 +1,65 @@
+{
+  "name": "ui",
+  "private": true,
+  "version": "0.0.0",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev:vite": "node node_modules/vite/bin/vite.js",
+    "dev:electron": "node node_modules/wait-on/bin/wait-on tcp:5173 && powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_electron.ps1 && powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run_electron.ps1",
+    "dev": "node node_modules/concurrently/dist/bin/index.js -k \"node node_modules/vite/bin/vite.js\" \"node node_modules/wait-on/bin/wait-on tcp:5173 && powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_electron.ps1 && powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run_electron.ps1\"",
+    "build:backend": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ../scripts/build_backend.ps1",
+    "build:vite": "node node_modules/vite/bin/vite.js build",
+    "build:electron": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_electron.ps1",
+    "build": "node node_modules/vite/bin/vite.js build && powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_electron.ps1",
+    "pack": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ../scripts/build_backend.ps1 && node node_modules/vite/bin/vite.js build && powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_electron.ps1 && node node_modules/electron-builder/cli.js --dir",
+    "dist": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ../scripts/build_backend.ps1 && node node_modules/vite/bin/vite.js build && powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_electron.ps1 && powershell.exe -NoProfile -ExecutionPolicy Bypass -File ../scripts/package_windows.ps1"
+  },
+  "build": {
+    "appId": "com.tasktracker.app",
+    "productName": "TaskTracker",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend-dist/tasktracker-backend.exe",
+        "to": "backend/tasktracker-backend.exe"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "lucide-react": "^1.47.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.6",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.6.1",
+    "concurrently": "^10.0.5",
+    "cross-env": "^10.1.0",
+    "electron": "^44.4.3",
+    "electron-builder": "^26.15.3",
+    "oxlint": "^1.81.0",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "wait-on": "^9.1.0"
+  }
+}
